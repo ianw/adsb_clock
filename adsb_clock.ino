@@ -23,6 +23,7 @@ DMD dmd(DISPLAYS_ACROSS, DISPLAYS_DOWN);
 DS1302RTC RTC(2,3,4);
 
 int lastMinute = 0;
+int lastSecond = 0;
 
 /*--------------------------------------------------------------------------------------
   Interrupt handler for Timer1 (TimerOne) driven DMD refresh scanning, this gets
@@ -106,10 +107,14 @@ void loop(void)
                    }
            }
    } else {
+           // the current time
            char t[8];
            int h = hour();
            int s = second();
            int m = minute();
+
+           int i,p;
+
            dmd.selectFont(Arial_14);
 
            if (m != lastMinute) {
@@ -117,52 +122,33 @@ void loop(void)
                    lastMinute = m;
            }
 
-           Serial.println(s);
+           // don't bother if there's nothing to update
+           if (s != lastSecond) {
+                   lastSecond = s;
+           } else {
+                   return;
+           }
+
            sprintf(t, "%02d%02d%02d%02d", h,m,s);
 
            dmd.drawChar(  0,  0, t[0], GRAPHICS_NORMAL );
            dmd.drawChar(  7,  0, t[1], GRAPHICS_NORMAL );
-           dmd.drawChar( 14,  0, '.', GRAPHICS_NORMAL );
+           //dmd.drawChar( 14,  0, '.', GRAPHICS_NORMAL );
+           // slightly larger dot looks better
+           dmd.drawFilledBox(14, 9, 15, 10, GRAPHICS_NORMAL);
            dmd.drawChar( 17,  0, t[2], GRAPHICS_NORMAL );
            dmd.drawChar( 25,  0, t[3], GRAPHICS_NORMAL );
 
            dmd.selectFont(System5x7);
 
-           // 2 4 8 16 32 64
-           // 64 32 16 8 4 2
-           #define START 5
-           if (s & 0x1<<6) {
-                   dmd.drawFilledBox(START, 12, START+2, 14, GRAPHICS_NORMAL);
-           } else {
-                   dmd.drawFilledBox(START, 12, START+2, 14, GRAPHICS_NOR);
+           // p is position from LHS for the boxes
+           for (i=5, p=4; i>=0; i--, p+=4) {
+                   if (s & 1<<i) {
+                           dmd.drawFilledBox(p, 12, p+2, 14, GRAPHICS_NORMAL);
+                   } else {
+                           dmd.drawFilledBox(p, 12, p+2, 14, GRAPHICS_NOR);
+                           dmd.drawFilledBox(p, 14, p+2, 14, GRAPHICS_NORMAL);
+                   }
            }
-           if (s & 0x1<<5) {
-                   dmd.drawFilledBox(START+4, 12, START+6, 14, GRAPHICS_NORMAL);
-           } else {
-                   dmd.drawFilledBox(START+4, 12, START+6, 14, GRAPHICS_NOR);
-           }
-
-           if (s & 0x1<<4) {
-                   dmd.drawFilledBox(START+8, 12, START+10, 14, GRAPHICS_NORMAL);
-           } else {
-                   dmd.drawFilledBox(START+8, 12, START+10, 14, GRAPHICS_NOR);
-           }
-           if (s & 0x1<<3) {
-                   dmd.drawFilledBox(START+12, 12, START+14, 14, GRAPHICS_NORMAL);
-           } else {
-                   dmd.drawFilledBox(START+12, 12, START+14, 14, GRAPHICS_NOR);
-           }
-           if (s & 0x1<<2) {
-                   dmd.drawFilledBox(START+16, 12, START+18, 14, GRAPHICS_NORMAL);
-           } else {
-                   dmd.drawFilledBox(START+16, 12, START+18, 14, GRAPHICS_NOR);
-           }
-           if (s & 0x1<<1) {
-                   dmd.drawFilledBox(START+20, 12, START+22, 14, GRAPHICS_NORMAL);
-           } else {
-                   dmd.drawFilledBox(START+20, 12, START+22, 14, GRAPHICS_NOR);
-           }
-
-//           delay(100);
    }
 }
