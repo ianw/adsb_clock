@@ -137,7 +137,7 @@ void loop(void)
                    return;
            }
 
-           sprintf(t, "%02d%02d%02d%02d", h,m,s);
+           sprintf(t, "%02d%02d%02dg", h,m,s);
 
            dmd.drawChar(  0,  0, t[0], GRAPHICS_NORMAL );
            dmd.drawChar(  7,  0, t[1], GRAPHICS_NORMAL );
