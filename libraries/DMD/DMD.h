@@ -69,8 +69,12 @@ LED Panel Layout in RAM
 #define LIGHT_DMD_ROW_03_07_11_15()       { digitalWrite( PIN_DMD_B, HIGH ); digitalWrite( PIN_DMD_A,  LOW ); }
 #define LIGHT_DMD_ROW_04_08_12_16()       { digitalWrite( PIN_DMD_B, HIGH ); digitalWrite( PIN_DMD_A, HIGH ); }
 #define LATCH_DMD_SHIFT_REG_TO_OUTPUT()   { digitalWrite( PIN_DMD_SCLK, HIGH ); digitalWrite( PIN_DMD_SCLK,  LOW ); }
-#define OE_DMD_ROWS_OFF()                 { digitalWrite( PIN_DMD_nOE, LOW  ); }
-#define OE_DMD_ROWS_ON()                  { digitalWrite( PIN_DMD_nOE, HIGH ); }
+//#define OE_DMD_ROWS_OFF()                 { digitalWrite( PIN_DMD_nOE, LOW  ); }
+//#define OE_DMD_ROWS_ON()                  { digitalWrite( PIN_DMD_nOE, HIGH ); }
+
+#define OE_DMD_ROWS_OFF()                 { pinMode(PIN_DMD_nOE, INPUT); }
+#define OE_DMD_ROWS_ON()                  { pinMode(PIN_DMD_nOE, OUTPUT); }
+
 
 //Pixel/graphics writing modes (bGraphicsMode)
 #define GRAPHICS_NORMAL    0

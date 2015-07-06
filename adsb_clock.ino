@@ -44,6 +44,7 @@ void setup(void)
    //initialize TimerOne's interrupt/CPU usage used to scan and refresh the display
 
    Timer1.initialize( 300 );           //period in microseconds to call ScanDMD. Anything longer than 5000 (5ms) and you can see flicker.
+   Timer1.pwm(PIN_DMD_nOE, 100);
    Timer1.attachInterrupt( ScanDMD );   //attach the Timer1 interrupt to ScanDMD which goes to dmd.scanDisplayBySPI()
 
    Serial.begin(9600);
@@ -68,6 +69,13 @@ void loop(void)
 {
    char inData[100];
    char code;
+
+   // set the brightness to one of 3 levels based on a photoresistor
+   // attached to analog pin0.  The PWM duty cycle seems to affect the
+   // display logarithmically; values < 100 have largest variation.
+   int brightness = map(analogRead(0), 0, 800, 0, 3);
+   int set_brightness[4] = {16, 100, 650, 1024};
+   Timer1.setPwmDuty(PIN_DMD_nOE, set_brightness[brightness]);
 
    // default to showing time
    code = 't';
