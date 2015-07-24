@@ -1,5 +1,8 @@
 /*----------------------------------------------------------------------*
- * Display the date and time from a DS1302 RTC every second.            *
+ * Display the date and time from a DS3231 or DS3232 RTC every second.  *
+ * Display the temperature once per minute. (The DS3231 does a          *
+ * temperature conversion once every 64 seconds. This is also the       *
+ * default for the DS3232.)                                             *
  *                                                                      *
  * Set the date and time by entering the following on the Arduino       *
  * serial monitor:                                                      *
@@ -20,7 +23,7 @@
  *                                                                      *
  * Jack Christensen 08Aug2013                                           *
  *                                                                      *
- * Adopted for DS1302RTC library by Timur Maksimov 2014                 *
+ * Tested with Arduino 1.0.5, Arduino Uno, DS3231/Chronodot, DS3232.    *
  *                                                                      *
  * This work is licensed under the Creative Commons Attribution-        *
  * ShareAlike 3.0 Unported License. To view a copy of this license,     *
@@ -29,54 +32,21 @@
  * San Francisco, California, 94105, USA.                               *
  *----------------------------------------------------------------------*/ 
  
-#include <DS1302RTC.h>
+#include <DS3232RTC.h>        //http://github.com/JChristensen/DS3232RTC
 #include <Streaming.h>        //http://arduiniana.org/libraries/streaming/
 #include <Time.h>             //http://playground.arduino.cc/Code/Time
-
-// Set pins:  CE, IO,CLK
-DS1302RTC RTC(27, 29, 31);
-
-// Optional connection for RTC module
-#define DS1302_GND_PIN 33
-#define DS1302_VCC_PIN 35
+#include <Wire.h>             //http://arduino.cc/en/Reference/Wire
 
 void setup(void)
 {
-  Serial.begin(115200);
+    Serial.begin(115200);
     
-  // Activate RTC module
-  digitalWrite(DS1302_GND_PIN, LOW);
-  pinMode(DS1302_GND_PIN, OUTPUT);
-
-  digitalWrite(DS1302_VCC_PIN, HIGH);
-  pinMode(DS1302_VCC_PIN, OUTPUT);
-  
-  Serial << F("RTC module activated");
-  Serial << endl;
-  delay(500);
-  
-  if (RTC.haltRTC()) {
-    Serial << F("The DS1302 is stopped.  Please set time");
-    Serial << F("to initialize the time and begin running.");
+    //setSyncProvider() causes the Time library to synchronize with the
+    //external RTC by calling RTC.get() every five minutes by default.
+    setSyncProvider(RTC.get);
+    Serial << F("RTC Sync");
+    if (timeStatus() != timeSet) Serial << F(" FAIL!");
     Serial << endl;
-  }
-  if (!RTC.writeEN()) {
-    Serial << F("The DS1302 is write protected. This normal.");
-    Serial << endl;
-  }
-  
-  delay(5000);
-    
-  //setSyncProvider() causes the Time library to synchronize with the
-  //external RTC by calling RTC.get() every five minutes by default.
-  setSyncProvider(RTC.get);
-
-  Serial << F("RTC Sync");
-  if (timeStatus() == timeSet)
-    Serial << F(" Ok!");
-  else
-    Serial << F(" FAIL!");
-  Serial << endl;
 }
 
 void loop(void)
@@ -104,15 +74,11 @@ void loop(void)
             tm.Minute = Serial.parseInt();
             tm.Second = Serial.parseInt();
             t = makeTime(tm);
-	    //use the time_t value to ensure correct weekday is set
-            if(RTC.set(t) == 0) { // Success
-              setTime(t);
-              Serial << F("RTC set to: ");
-              printDateTime(t);
-              Serial << endl;
-	    }
-	    else
-	      Serial << F("RTC set failed!") << endl;
+            RTC.set(t);        //use the time_t value to ensure correct weekday is set
+            setTime(t);        
+            Serial << F("RTC set to: ");
+            printDateTime(t);
+            Serial << endl;
             //dump any extraneous input
             while (Serial.available() > 0) Serial.read();
         }
@@ -122,6 +88,11 @@ void loop(void)
     if (t != tLast) {
         tLast = t;
         printDateTime(t);
+        if (second(t) == 0) {
+            float c = RTC.temperature() / 4.;
+            float f = c * 9. / 5. + 32.;
+            Serial << F("  ") << c << F(" C  ") << f << F(" F");
+        }
         Serial << endl;
     }
 }

@@ -1,7 +1,8 @@
 import serial
 import sys
 
-ser = serial.Serial('/dev/ttyACM0', 9600)
+#ser = serial.Serial('/dev/ttyACM0', 9600)
+ser = serial.Serial('/dev/rfcomm0', 9600)
 
 message = sys.argv[1]
 
