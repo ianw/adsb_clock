@@ -214,8 +214,23 @@ void loop(void)
            }
    }
 
+   if (code == 'd') {
+           char s[6];  // XX XXX
+                       // 123456
+           dmd.clearScreen(true);
+           dmd.selectFont(System5x7);
+
+           sprintf(s, "%02d %s", day(), monthShortStr(month()));
+           dmd.drawString(1, 1, s, 2, GRAPHICS_NORMAL);
+           dmd.drawString(14, 1, s+3, 3, GRAPHICS_NORMAL);
+
+           sprintf(s, "%02dC", RTC.temperature() / 4);
+           dmd.drawString(8, 9, s, 3, GRAPHICS_NORMAL);
+           delay(5000);
+           dmd.clearScreen(true);
+   }
    // scroll the message if "m"
-   if (code == 'm') {
+   else if (code == 'm') {
            dmd.clearScreen(true);
            dmd.selectFont(System5x7);
            dmd.drawMarquee(inData, strlen(inData), (32*DISPLAYS_ACROSS)-1, 5);
