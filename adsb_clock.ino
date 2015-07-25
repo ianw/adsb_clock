@@ -76,7 +76,7 @@ int read_buttons(void) {
 int check_buttons(void) {
 
         static int was_pushed;
-        static long last_time;
+        static unsigned long last_time;
         int pushed = 0;
         int button_just_pushed = 0;
 
@@ -198,8 +198,8 @@ void loop(void)
            dmd.clearScreen(true);
            dmd.selectFont(System5x7);
            dmd.drawMarquee(inData, strlen(inData), (32*DISPLAYS_ACROSS)-1, 5);
-           long start = millis();
-           long timer = start;
+           unsigned long start = millis();
+           unsigned long timer = start;
            boolean ret=false;
            while (!ret) {
                    if ((timer+100) < millis()) {
