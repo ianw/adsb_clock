@@ -26,7 +26,7 @@ void ScanDMD()
 
 int lastMinute = 0;
 int lastSecond = 0;
-int lastBrightness = 0;
+long lastBrightness = 0;
 
 /* Resistor ladder button definitions */
 #define btn_ONE   (1<<0)
@@ -190,13 +190,16 @@ void loop(void)
    }
 
    // set the brightness to one of 3 levels based on a photoresistor
-   // attached to analog pin0.  The PWM duty cycle seems to affect the
-   // display logarithmically; values < 100 have largest variation.
-   int brightness = map(analogRead(0), 0, 800, 0, 3);
-   const int set_brightness[4] = {16, 100, 650, 1024};
-   if (lastBrightness != brightness ) {
-           lastBrightness = brightness;
-           Timer1.setPwmDuty(PIN_DMD_nOE, set_brightness[brightness]);
+   // attached to analog pin0.
+   // a really bright light returns about 970 for this photoresistor
+   // The PWM duty cycle seems to affect the display logarithmically;
+   // values < 100 have largest variation.  this slightly logarithmic
+   // response seems to work well and reduce flicker.
+   long b = analogRead(0);
+   long b_squared = (b * b) / 1024;
+   if (lastBrightness != b_squared) {
+           lastBrightness = b_squared;
+           Timer1.setPwmDuty(PIN_DMD_nOE, b_squared);
    }
 
    if (Serial.available()) {
