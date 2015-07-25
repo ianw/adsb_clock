@@ -1,30 +1,19 @@
-/*--------------------------------------------------------------------------------------
-  Includes
---------------------------------------------------------------------------------------*/
-#include <SPI.h>        //SPI.h must be included as DMD is written by SPI (the IDE complains otherwise)
-#include <DMD.h>        //
-#include <TimerOne.h>   //
+#include <assert.h>
+#include <SPI.h>
+#include <DMD.h>
+#include <TimerOne.h>
 #include <DS3232RTC.h>
 #include <Time.h>
 #include <Wire.h>
 
 #include "SystemFont5x7.h"
-#include "Arial_black_16.h"
+//#include "Arial_black_16.h"
 #include "Arial14.h"
 
 //Fire up the DMD library as dmd
 #define DISPLAYS_ACROSS 1
 #define DISPLAYS_DOWN 1
 DMD dmd(DISPLAYS_ACROSS, DISPLAYS_DOWN);
-
-// RST -> 2
-// DATA -> 3
-// CLOCK -> 4
-//DS1302RTC RTC(2,3,4);
-
-int lastMinute = 0;
-int lastSecond = 0;
-int lastBrightness = 0;
 
 /* Interrupt handler for Timer1 (TimerOne) driven DMD refresh
  * scanning, this gets called at the period set in
@@ -35,6 +24,11 @@ void ScanDMD()
   dmd.scanDisplayBySPI();
 }
 
+int lastMinute = 0;
+int lastSecond = 0;
+int lastBrightness = 0;
+
+/* Resistor ladder button definitions */
 #define btn_ONE   (1<<0)
 #define btn_TWO   (1<<1)
 #define btn_THREE (1<<2)
@@ -46,10 +40,12 @@ void ScanDMD()
 #define DEBOUNCE 10
 
 /*
- * read state of resistor ladder buttons & alternative digital button,
- * which is pulled-up (i.e. 0 denotes pressed).
+ * Read state of resistor ladder buttons from adc pin 1.  Also handle
+ * the "alternative" digital button, which is pulled-up (i.e. 0
+ * denotes pressed) and plugged into pin 12.
  */
-int read_buttons(void) {
+int read_buttons(void)
+{
         // resistor ladder on pin 1
         int adc_in = analogRead(1);
         // alternate toggle button on 12
@@ -71,10 +67,18 @@ int read_buttons(void) {
 
         if (adc_in < 800 && !alt) return btn_FOUR;
         if (adc_in < 800 && alt)  return btn_EIGHT;
+
+        assert("button read not handled!");
 }
 
-int check_buttons(void) {
-
+/*
+ * Check if a button has been pushed.  If we see the button down,
+ * remember that until we see it not pressed.  Simple debouncing done
+ * by ignoring input for DEBOUNCE ms.  Returns 0 or btn_* if the
+ * button was seen as pressed.
+ */
+int check_buttons(void)
+{
         static int was_pushed;
         static unsigned long last_time;
         int pushed = 0;
@@ -107,37 +111,38 @@ int check_buttons(void) {
 
 void setup(void)
 {
+        Serial.begin(9600);
 
-   //initialize TimerOne's interrupt/CPU usage used to scan and refresh the display
+        /* Anything longer than 5000 (5ms) for DMD rescan and you can
+         * see flicker. */
+        Timer1.initialize( 300 );
+        Timer1.attachInterrupt( ScanDMD );
 
-   Timer1.initialize( 300 );           //period in microseconds to call ScanDMD. Anything longer than 5000 (5ms) and you can see flicker.
-   Timer1.pwm(PIN_DMD_nOE, 100);
-   Timer1.attachInterrupt( ScanDMD );   //attach the Timer1 interrupt to ScanDMD which goes to dmd.scanDisplayBySPI()
+        /* PWN duty cycle for screen brightness */
+        Timer1.pwm(PIN_DMD_nOE, 100);
 
-   Serial.begin(9600);
 
-   //clear/init the DMD pixels held in RAM
-   dmd.clearScreen( true );   //true is normal (all pixels off), false is negative (all pixels on)
+        dmd.clearScreen( true );
 
-   setSyncProvider(RTC.get);
+        setSyncProvider(RTC.get);
 
-   lastMinute = minute();
-//   setTime(15,34,00,24,07,2015);
-//   if (RTC.set(now()) == 0) {
-//           Serial.println("Set time!");
-//   }
+        lastMinute = minute();
 
-   // "alternate" button
-   pinMode(12, INPUT_PULLUP);
+#if 0
+        /* use this to set initial time */
+        setTime(15,34,00,24,07,2015);
+        if (RTC.set(now()) == 0) {
+           Serial.println("Set time!");
+        }
+#endif // inital time set
 
-   // buzzer
-   pinMode(5, OUTPUT);
+        // "alternate" button
+        pinMode(12, INPUT_PULLUP);
+
+        // buzzer
+        pinMode(5, OUTPUT);
 }
 
-/*--------------------------------------------------------------------------------------
-  loop
-  Arduino architecture main loop
---------------------------------------------------------------------------------------*/
 void loop(void)
 {
    char inData[100];
@@ -244,6 +249,7 @@ void loop(void)
                    }
            }
    } else {
+
            // the current time
            char t[8];
            int h = hour();
