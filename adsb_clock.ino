@@ -271,12 +271,12 @@ void loop(void)
 
            sprintf(t, "%02d%02d%02dg", h,m,s);
 
-           dmd.drawChar(  0,  0, t[0], GRAPHICS_NORMAL );
-           dmd.drawChar(  7,  0, t[1], GRAPHICS_NORMAL );
+           dmd.drawChar(  1,  0, t[0], GRAPHICS_NORMAL );
+           dmd.drawChar(  8,  0, t[1], GRAPHICS_NORMAL );
            //dmd.drawChar( 14,  0, '.', GRAPHICS_NORMAL );
            // slightly larger dot looks better
-           dmd.drawFilledBox(14, 9, 15, 10, GRAPHICS_NORMAL);
-           dmd.drawChar( 17,  0, t[2], GRAPHICS_NORMAL );
+           dmd.drawFilledBox(15, 9, 16, 10, GRAPHICS_NORMAL);
+           dmd.drawChar( 18,  0, t[2], GRAPHICS_NORMAL );
            dmd.drawChar( 25,  0, t[3], GRAPHICS_NORMAL );
 
            dmd.selectFont(System5x7);
@@ -284,10 +284,10 @@ void loop(void)
            // p is position from LHS for the boxes
            for (i=5, p=4; i>=0; i--, p+=4) {
                    if (s & 1<<i) {
-                           dmd.drawFilledBox(p, 12, p+2, 14, GRAPHICS_NORMAL);
+                           dmd.drawFilledBox(p, 13, p+2, 15, GRAPHICS_NORMAL);
                    } else {
-                           dmd.drawFilledBox(p, 12, p+2, 14, GRAPHICS_NOR);
-                           dmd.drawFilledBox(p, 14, p+2, 14, GRAPHICS_NORMAL);
+                           dmd.drawFilledBox(p, 13, p+2, 15, GRAPHICS_NOR);
+                           dmd.drawFilledBox(p, 15, p+2, 15, GRAPHICS_NORMAL);
                    }
            }
    }
