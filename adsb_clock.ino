@@ -143,19 +143,44 @@ void loop(void)
    char inData[100];
    char code;
    int ret;
+   bool must_update = false;
+
+   // default to showing time
+   code = 't';
 
    switch (check_buttons()) {
    case 0:
            break;
    case btn_ONE:
            tone(5, 2048, 100);
-           adjustTime(60);
+           Serial.println(now());
+           setTime( now() + 3600 );
            ret = RTC.set(now());
+           Serial.println(ret);
+           Serial.println(now());
+           must_update = true;
            break;
    case btn_FIVE:
            tone(5, 1800, 100);
-           adjustTime(-60);
+           setTime( now() - 3600 );
            ret = RTC.set(now());
+           must_update = true;
+           break;
+   case btn_TWO:
+           tone(5, 2048, 100);
+           setTime( now() + 60 );
+           ret = RTC.set(now());
+           must_update = true;
+           break;
+   case btn_SIX:
+           tone(5, 1800, 100);
+           setTime( now() - 60 );
+           ret = RTC.set(now());
+           must_update = true;
+           break;
+   case btn_FOUR:
+           // scroll a date
+           code = 'd';
            break;
    }
 
@@ -168,10 +193,6 @@ void loop(void)
            lastBrightness = brightness;
            Timer1.setPwmDuty(PIN_DMD_nOE, set_brightness[brightness]);
    }
-
-
-   // default to showing time
-   code = 't';
 
    if (Serial.available()) {
            code = Serial.read();
@@ -218,7 +239,10 @@ void loop(void)
 
            dmd.selectFont(Arial_14);
 
-           if (m != lastMinute) {
+           /* only wipe the whole screen when we update the time once
+            * a minute.  The second counters will wipe themselves.
+            * Reduces flicker */
+           if (m != lastMinute || must_update) {
                    dmd.clearScreen(true);
                    lastMinute = m;
            }
