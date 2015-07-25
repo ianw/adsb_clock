@@ -146,23 +146,17 @@ void setup(void)
 void loop(void)
 {
    char inData[100];
-   char code;
+   char code = 't';
    int ret;
    bool must_update = false;
 
-   // default to showing time
-   code = 't';
-
    switch (check_buttons()) {
-   case 0:
+   default:
            break;
    case btn_ONE:
            tone(5, 2048, 100);
-           Serial.println(now());
            setTime( now() + 3600 );
            ret = RTC.set(now());
-           Serial.println(ret);
-           Serial.println(now());
            must_update = true;
            break;
    case btn_FIVE:
@@ -184,7 +178,7 @@ void loop(void)
            must_update = true;
            break;
    case btn_FOUR:
-           // scroll a date
+           /* show date */
            code = 'd';
            break;
    }
@@ -223,6 +217,7 @@ void loop(void)
    }
 
    if (code == 'd') {
+           // show date and temp
            char s[6];  // XX XXX
                        // 123456
            dmd.clearScreen(true);
@@ -236,9 +231,8 @@ void loop(void)
            dmd.drawString(8, 9, s, 3, GRAPHICS_NORMAL);
            delay(5000);
            dmd.clearScreen(true);
-   }
-   // scroll the message if "m"
-   else if (code == 'm') {
+   } else if (code == 'm') {
+           // scroll a message
            dmd.clearScreen(true);
            dmd.selectFont(System5x7);
            dmd.drawMarquee(inData, strlen(inData), (32*DISPLAYS_ACROSS)-1, 5);
@@ -252,7 +246,6 @@ void loop(void)
                    }
            }
    } else {
-
            // the current time
            char t[8];
            int h = hour();
