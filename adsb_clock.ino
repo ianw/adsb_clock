@@ -191,6 +191,7 @@ void loop(void)
    // response seems to work well and reduce flicker.
    long b = analogRead(0);
    long b_squared = (b * b) / 1024;
+   b_squared = max(16, b_squared); // minimum dim
    if (lastBrightness != b_squared) {
            lastBrightness = b_squared;
            Timer1.setPwmDuty(PIN_DMD_nOE, b_squared);
